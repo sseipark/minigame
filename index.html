@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>세이가 좋아하는 미니게임</title>
+    <!-- ✨ 반짝이 파비콘(아이콘) 적용 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+    <!-- 카카오톡 SDK 불러오기 -->
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiL3A4xflhUXrSkP58qnFQM4hXC1BQM5u20+4ACdd45F5401d/c6f71d5b0785f2" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --pink-main: #f8a5c2;
+            --pink-dark: #D65B78;
+            --pink-bg: #fff0f5;
+            --blue-accent: #2563EB;
+            --card-bg: #ffffff;
+            --text-color: #2d3436;
+            --border-soft: #ffeaa7;
+            --kakao-yellow: #FEE500;
+        }
+
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif; }
+        body { background-color: #f7d79422; color: var(--text-color); margin: 0; padding: 20px 10px; display: flex; justify-content: center; }
+        
+        .container { width: 100%; max-width: 500px; background: var(--card-bg); padding: 24px; border-radius: 24px; box-shadow: 0 10px 25px rgba(248, 165, 194, 0.2); border: 2px solid var(--border-soft); }
+
+        .app-title-wrapper { text-align: center; margin-bottom: 18px; }
+        .app-title-main { font-size: 17px; font-weight: 600; color: #111827; letter-spacing: -0.3px; margin-bottom: 5px; }
+        .app-title-sub { font-size: 15px; font-weight: 700; color: var(--blue-accent); }
+
+        .tab-group { display: flex; gap: 8px; background: #fff5f8; padding: 5px; border-radius: 16px; margin-bottom: 16px; }
+        .tab-btn { flex: 1; padding: 10px 0; font-size: 14px; font-weight: bold; border: none; background: none; color: #9ca3af; cursor: pointer; border-radius: 12px; transition: all 0.2s; }
+        .tab-btn.active { background: #ffffff; color: var(--pink-dark); box-shadow: 0 3px 10px rgba(0,0,0,0.05); }
+
+        .game-panel { display: none; }
+        .game-panel.active { display: block; }
+
+        .counter-box { display: flex; align-items: center; justify-content: center; gap: 12px; background: #faf0f6; padding: 8px; border-radius: 14px; margin-bottom: 12px; }
+        .counter-label { font-size: 13px; font-weight: bold; color: #6b7280; }
+        .counter-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: #ffffff; font-size: 16px; font-weight: bold; color: var(--pink-dark); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .counter-val { font-size: 15px; font-weight: bold; color: var(--pink-dark); min-width: 20px; text-align: center; }
+
+        .scroll-input-area { max-height: 135px; overflow-y: auto; padding-right: 4px; margin-bottom: 12px; }
+        .scroll-input-area::-webkit-scrollbar { width: 6px; }
+        .scroll-input-area::-webkit-scrollbar-thumb { background-color: #f8a5c288; border-radius: 10px; }
+
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .single-grid { display: flex; flex-direction: column; gap: 8px; }
+        .input-item { padding: 8px 12px; border: 1.5px solid #ffeaa7; border-radius: 10px; font-size: 13px; outline: none; background: #fffdf9; color: #374151; }
+        .input-item::placeholder { color: #d1d5db; }
+
+        .btn-start { width: 100%; padding: 13px; background: var(--pink-main); color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(248, 165, 194, 0.4); margin-top: 8px; }
+
+        .canvas-container { position: relative; width: 250px; height: 250px; margin: 10px auto; }
+        .arrow { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 15px solid #f78fb3; z-index: 10; }
+
+        .result-card { margin-top: 16px; padding: 12px; background: #fff8fa; border: 1.5px dashed var(--pink-main); border-radius: 16px; text-align: center; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .result-title { font-weight: bold; color: var(--pink-dark); margin-bottom: 6px; font-size: 13px; }
+        .result-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+        .res-tag { background: #ffffff; border: 1px solid var(--pink-main); padding: 4px 10px; border-radius: 12px; font-size: 12px; color: #374151; font-weight: 600; }
+        .res-tag b { color: var(--pink-dark); }
+
+        .share-group { display: flex; gap: 8px; margin-top: 12px; }
+        .btn-share-kakao { flex: 1; padding: 11px; background: var(--kakao-yellow); color: #191919; border: none; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-share-link { flex: 1; padding: 11px; background: #e5e7eb; color: #374151; border: none; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; }
+
+        @media (max-width: 480px) {
+            body { padding: 8px 4px; }
+            .container { padding: 16px 12px; border-radius: 18px; }
+            .scroll-input-area { max-height: 105px; }
+            .canvas-container { width: 210px; height: 210px; }
+            #rCanvas { width: 210px !important; height: 210px !important; }
+            #lCanvas { width: 100% !important; height: 190px !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="app-title-wrapper">
+        <div class="app-title-main">세이가 좋아하는 미니게임, 미니게임</div>
+        <div class="app-title-sub">Game Start</div>
+    </div>
+
+    <div class="tab-group">
+        <button class="tab-btn active" onclick="switchTab('roulette')">🎯 원판 돌리기</button>
+        <button class="tab-btn" onclick="switchTab('ladder')">🪜 사다리 타기</button>
+    </div>
+
+    <!-- 1. 돌림판 -->
+    <div id="roulette-panel" class="game-panel active">
+        <div class="counter-box">
+            <span class="counter-label">옵션 개수</span>
+            <button class="counter-btn" onclick="changeCount('r', -1)">-</button>
+            <span class="counter-val" id="r-num">4</span>
+            <button class="counter-btn" onclick="changeCount('r', 1)">+</button>
+        </div>
+
+        <div class="scroll-input-area">
+            <div class="single-grid" id="r-inputs"></div>
+        </div>
+
+        <div class="canvas-container">
+            <div class="arrow"></div>
+            <canvas id="rCanvas" width="250" height="250"></canvas>
+        </div>
+
+        <button class="btn-start" onclick="spinRoulette()">🚀 Game Start</button>
+    </div>
+
+    <!-- 2. 사다리 -->
+    <div id="ladder-panel" class="game-panel">
+        <div class="counter-box">
+            <span class="counter-label">참가 인원</span>
+            <button class="counter-btn" onclick="changeCount('l', -1)">-</button>
+            <span class="counter-val" id="l-num">4</span>
+            <button class="counter-btn" onclick="changeCount('l', 1)">+</button>
+        </div>
+
+        <div class="scroll-input-area">
+            <div class="input-grid" id="l-inputs"></div>
+        </div>
+
+        <div style="background: #fffdfa; border: 1px solid #ffeaa7; border-radius: 16px; padding: 8px; margin-bottom: 10px;">
+            <canvas id="lCanvas" width="400" height="220"></canvas>
+        </div>
+
+        <button class="btn-start" onclick="startLadder()">🚀 Game Start</button>
+    </div>
+
+    <div class="result-card" id="result-area">
+        <span style="color:#9ca3af; font-size:13px;">버튼을 눌러 게임을 시작하세요! 🎲</span>
+    </div>
+
+    <div class="share-group">
+        <button class="btn-share-kakao" onclick="shareKakao()">💬 카카오톡 공유</button>
+        <button class="btn-share-link" onclick="shareNativeOrLink()">📤 결과 복사/공유</button>
+    </div>
+</div>
+
+<script>
+    const KAKAO_JAVASCRIPT_KEY = 'YOUR_JAVASCRIPT_KEY'; 
+
+    if (window.Kakao && !window.Kakao.isInitialized()) {
+        try {
+            window.Kakao.init(KAKAO_JAVASCRIPT_KEY);
+        } catch(e) {}
+    }
+
+    let lastResultText = '';
+
+    const pastels = ["#FFD1DC", "#E2D4F9", "#FFECB3", "#C7CEEA", "#B5EAD7", "#FFDAC1", "#E0FEFE", "#f8a5c2"];
+    let rLen = 4, lLen = 4;
+    let rData = ["", "", "", ""];
+    let lPlayers = ["", "", "", ""];
+    let lResults = ["", "", "", ""];
+
+    function switchTab(mode) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.game-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('result-area').innerHTML = '<span style="color:#9ca3af; font-size:13px;">버튼을 눌러 게임을 시작하세요! 🎲</span>';
+        lastResultText = '';
+
+        if (mode === 'roulette') {
+            event.target.classList.add('active');
+            document.getElementById('roulette-panel').classList.add('active');
+            renderRInputs(); drawRoulette();
+        } else {
+            event.target.classList.add('active');
+            document.getElementById('ladder-panel').classList.add('active');
+            renderLInputs(); initLadder(false);
+        }
+    }
+
+    function changeCount(type, delta) {
+        if (type === 'r') {
+            rLen = Math.max(2, Math.min(8, rLen + delta));
+            document.getElementById('r-num').innerText = rLen;
+            renderRInputs(); drawRoulette();
+        } else {
+            lLen = Math.max(2, Math.min(6, lLen + delta));
+            document.getElementById('l-num').innerText = lLen;
+            renderLInputs(); initLadder(false);
+        }
+    }
+
+    // --- 돌림판 ---
+    function renderRInputs() {
+        const c = document.getElementById('r-inputs');
+        c.innerHTML = '';
+        for(let i=0; i<rLen; i++) {
+            const v = rData[i] || '';
+            c.innerHTML += `<input type="text" class="input-item" value="${v}" placeholder="옵션 ${i+1}" oninput="rData[${i}]=this.value; drawRoulette();">`;
+        }
+    }
+
+    const rCanvas = document.getElementById('rCanvas');
+    const rCtx = rCanvas.getContext('2d');
+    let curAngle = 0;
+
+    function drawRoulette() {
+        const size = rCanvas.width;
+        const center = size / 2;
+        rCtx.clearRect(0,0,size,size);
+        const slice = (2 * Math.PI) / rLen;
+
+        rCtx.save();
+        rCtx.translate(center, center);
+        rCtx.rotate(curAngle);
+
+        for(let i=0; i<rLen; i++) {
+            rCtx.beginPath();
+            rCtx.fillStyle = pastels[i % pastels.length];
+            rCtx.moveTo(0,0);
+            rCtx.arc(0,0,center - 5, i*slice, (i+1)*slice);
+            rCtx.fill();
+
+            rCtx.save();
+            rCtx.rotate(i*slice + slice/2);
+            rCtx.textAlign = "right";
+            rCtx.fillStyle = "#374151";
+            rCtx.font = "bold 13px sans-serif";
+            const displayText = rData[i] && rData[i].trim() !== '' ? rData[i] : `옵션 ${i+1}`;
+            rCtx.fillText(displayText, center - 20, 4);
+            rCtx.restore();
+        }
+        rCtx.restore();
+    }
+
+    function spinRoulette() {
+        document.getElementById('result-area').innerHTML = '<span style="color:#D65B78; font-size:13px; font-weight:bold;">두근두근 돌고 있어요...! 팽팽~ 💫</span>';
+        const totalRot = (Math.floor(Math.random() * 5) + 5) * 2 * Math.PI + Math.random() * 2 * Math.PI;
+        const start = curAngle, startTime = performance.now();
+
+        function anim(now) {
+            const p = Math.min((now - startTime) / 3000, 1);
+            curAngle = start + totalRot * (1 - Math.pow(1 - p, 3));
+            drawRoulette();
+
+            if (p < 1) requestAnimationFrame(anim);
+            else {
+                const norm = (curAngle % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
+                const winIdx = Math.floor(((3*Math.PI/2 - norm + 2*Math.PI) % (2*Math.PI)) / ((2*Math.PI)/rLen)) % rLen;
+                const finalVal = rData[winIdx] && rData[winIdx].trim() !== '' ? rData[winIdx] : `옵션 ${winIdx+1}`;
+                
+                lastResultText = `🎯 돌림판 당첨: [ ${finalVal} ]`;
+                document.getElementById('result-area').innerHTML = `
+                    <div class="result-title">🎯 당첨 결과 🎯</div>
+                    <div class="res-tag" style="font-size:14px;">[ <b>${finalVal}</b> ]</div>
+                `;
+            }
+        }
+        requestAnimationFrame(anim);
+    }
+
+    // --- 사다리 ---
+    function renderLInputs() {
+        const c = document.getElementById('l-inputs');
+        c.innerHTML = '';
+        for(let i=0; i<lLen; i++) {
+            const p = lPlayers[i] || '';
+            const r = lResults[i] || '';
+            c.innerHTML += `
+                <input type="text" class="input-item" value="${p}" placeholder="참가자 ${i+1}" oninput="lPlayers[${i}]=this.value; initLadder(false);">
+                <input type="text" class="input-item" value="${r}" placeholder="결과 ${i+1}" oninput="lResults[${i}]=this.value; initLadder(false);">
+            `;
+        }
+    }
+
+    const lCanvas = document.getElementById('lCanvas');
+    const lCtx = lCanvas.getContext('2d');
+    let rungs = [];
+
+    function generateNewLadderRungs() {
+        rungs = [];
+        const levels = 5;
+        const levelYPositions = [];
+        for(let l = 1; l <= levels; l++) {
+            levelYPositions.push(22 + 170 * (l / (levels + 1)));
+        }
+
+        for(let i = 0; i < lLen - 1; i++) {
+            const randomLevel = Math.floor(Math.random() * levels);
+            const y = levelYPositions[randomLevel];
+            
+            if (!rungs.some(r => r.y === y && (r.col === i - 1 || r.col === i || r.col === i + 1))) {
+                rungs.push({y, col: i});
+            } else {
+                const alternateLevel = (randomLevel + 2) % levels;
+                rungs.push({y: levelYPositions[alternateLevel], col: i});
+            }
+        }
+
+        for(let l = 0; l < levels; l++) {
+            const y = levelYPositions[l];
+            for(let i = 0; i < lLen - 1; i++) {
+                if (Math.random() > 0.5) {
+                    if (!rungs.some(r => Math.abs(r.y - y) < 5 && (r.col === i - 1 || r.col === i || r.col === i + 1))) {
+                        rungs.push({y, col: i});
+                    }
+                }
+            }
+        }
+    }
+
+    function initLadder(showRungs = false) {
+        if (showRungs) generateNewLadderRungs();
+        drawLadderBase(showRungs);
+    }
+
+    function drawLadderBase(showRungs = false) {
+        lCtx.clearRect(0,0,400,220);
+        const colW = 400 / (lLen + 1);
+        lCtx.lineWidth = 2;
+        lCtx.strokeStyle = "#ffeaa7";
+        lCtx.font = "bold 12px sans-serif";
+        lCtx.textAlign = "center";
+
+        for(let i=0; i<lLen; i++) {
+            const x = (i+1) * colW;
+            lCtx.fillStyle = "#374151";
+            const pText = lPlayers[i] && lPlayers[i].trim() !== '' ? lPlayers[i] : `참가자 ${i+1}`;
+            const rText = lResults[i] && lResults[i].trim() !== '' ? lResults[i] : `결과 ${i+1}`;
+            lCtx.fillText(pText, x, 16);
+            lCtx.fillText(rText, x, 210);
+
+            lCtx.beginPath();
+            lCtx.moveTo(x, 22);
+            lCtx.lineTo(x, 192);
+            lCtx.stroke();
+        }
+
+        if (showRungs) {
+            rungs.forEach(r => {
+                lCtx.beginPath();
+                lCtx.moveTo((r.col+1)*colW, r.y);
+                lCtx.lineTo((r.col+2)*colW, r.y);
+                lCtx.stroke();
+            });
+        }
+    }
+
+    function startLadder() {
+        initLadder(true);
+
+        document.getElementById('result-area').innerHTML = '<span style="color:#D65B78; font-size:13px; font-weight:bold;">두근두근 사다리 타는 중... 🪜</span>';
+        const colW = 400 / (lLen + 1);
+        let finalMap = [];
+        let pIdx = 0;
+
+        function animP() {
+            if(pIdx >= lLen) {
+                const tagsHtml = finalMap.map(m => `<div class="res-tag">${m.p} ➔ <b>${m.r}</b></div>`).join('');
+                lastResultText = "🪜 사다리 결과:\n" + finalMap.map(m => `${m.p} ➔ ${m.r}`).join('\n');
+
+                document.getElementById('result-area').innerHTML = `
+                    <div class="result-title">🎉 최종 사다리 결과 🎉</div>
+                    <div class="result-tags">${tagsHtml}</div>
+                `;
+                return;
+            }
+
+            let curCol = pIdx, curY = 22;
+            let path = [{x: (curCol+1)*colW, y: curY}];
+
+            while(curY < 192) {
+                let rung = rungs.find(r => Math.abs(r.y - curY) < 2 && (r.col === curCol || r.col === curCol-1));
+                if(rung) {
+                    path.push({x: (curCol+1)*colW, y: rung.y});
+                    curCol = (rung.col === curCol) ? curCol + 1 : curCol - 1;
+                    path.push({x: (curCol+1)*colW, y: rung.y});
+                }
+                curY += 4;
+            }
+            path.push({x: (curCol+1)*colW, y: 192});
+
+            const pText = lPlayers[pIdx] && lPlayers[pIdx].trim() !== '' ? lPlayers[pIdx] : `참가자 ${pIdx+1}`;
+            const rText = lResults[curCol] && lResults[curCol].trim() !== '' ? lResults[curCol] : `결과 ${curCol+1}`;
+            finalMap.push({p: pText, r: rText});
+
+            let step = 0;
+            function drawStep() {
+                if(step < path.length - 1) {
+                    lCtx.beginPath();
+                    lCtx.lineWidth = 3.5;
+                    lCtx.strokeStyle = pastels[pIdx % pastels.length];
+                    lCtx.moveTo(path[step].x, path[step].y);
+                    lCtx.lineTo(path[step+1].x, path[step+1].y);
+                    lCtx.stroke();
+                    step++;
+                    setTimeout(drawStep, 15);
+                } else {
+                    pIdx++;
+                    setTimeout(animP, 150);
+                }
+            }
+            drawStep();
+        }
+        animP();
+    }
+
+    function shareKakao() {
+        if (!lastResultText) {
+            alert('먼저 Game Start를 눌러 게임 결과를 확인해 주세요!');
+            return;
+        }
+
+        if (window.Kakao && window.Kakao.Share) {
+            window.Kakao.Share.sendDefault({
+                objectType: 'feed',
+                content: {
+                    title: '✨ 세이가 좋아하는 미니게임 결과 ✨',
+                    description: lastResultText,
+                    imageUrl: 'https://cdn-icons-png.flaticon.com/512/3063/3063822.png',
+                    link: {
+                        mobileWebUrl: window.location.href,
+                        webUrl: window.location.href,
+                    },
+                },
+                buttons: [
+                    {
+                        title: '나도 도전하기 🚀',
+                        link: {
+                            mobileWebUrl: window.location.href,
+                            webUrl: window.location.href,
+                        },
+                    },
+                ],
+            });
+        } else {
+            alert('카카오 키가 설정되지 않았거나 카카오 SDK를 불러오지 못했습니다.');
+        }
+    }
+
+    function shareNativeOrLink() {
+        if (!lastResultText) {
+            alert('먼저 Game Start를 눌러 게임 결과를 확인해 주세요!');
+            return;
+        }
+
+        const shareMsg = `✨ [세이가 좋아하는 미니게임 결과]\n\n${lastResultText}\n\n👉 너도 도전해봐: ${window.location.href}`;
+
+        if (navigator.share) {
+            navigator.share({
+                title: '세이가 좋아하는 미니게임 ✨',
+                text: shareMsg,
+                url: window.location.href
+            }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(shareMsg)
+                .then(() => alert('게임 결과가 클립보드에 복사되었습니다! 원하는 곳에 붙여넣기(Ctrl+V) 하세요.'))
+                .catch(() => alert('복사에 실패했습니다.'));
+        }
+    }
+
+    renderRInputs();
+    drawRoulette();
+</script>
+</body>
+</html>
