@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>세이가 좋아하는 미니게임</title>
     
-    <!-- ⭐️ 카카오톡 공유 미리보기 이미지 (오토바이 완벽 퇴치!) -->
+    <!-- 💖 파스텔 앱 아이콘 오픈그래프(OG) 이미지 적용 완료! -->
     <meta property="og:title" content="세이가 좋아하는 미니게임 ✨">
     <meta property="og:description" content="돌림판 & 사다리타기 미니게임! 지금 바로 도전해 보세요 🚀">
-    <meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/3063/3063822.png">
-    <meta property="og:image:width" content="800">
-    <meta property="og:image:height" content="800">
+    <meta property="og:image" content="https://raw.githubusercontent.com/sseipark/minigame/main/%EC%84%B8%EC%9D%B4%EA%B0%80%20%EC%A2%8B%EC%95%84%ED%95%98%EB%8A%94%20%EB%AF%B8%EB%8B%88%EA%B2%8C%EC%9E%84.png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
 
     <!-- ✨ 반짝이 파비콘(아이콘) 적용 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
@@ -428,6 +428,7 @@
         initKakaoSDK();
 
         const siteUrl = "https://sseipark.github.io/minigame/";
+        const iconUrl = "https://raw.githubusercontent.com/sseipark/minigame/main/%EC%84%B8%EC%9D%B4%EA%B0%80%20%EC%A2%8B%EC%95%84%ED%95%98%EB%8A%94%20%EB%AF%B8%EB%8B%88%EA%B2%8C%EC%9E%84.png";
 
         if (window.Kakao && window.Kakao.Share) {
             let kakaoData = {
@@ -435,7 +436,7 @@
                 content: {
                     title: '✨ 세이가 좋아하는 미니게임 결과 ✨',
                     description: currentGameMode === 'roulette' ? `🎯 당첨 결과: ${lastResultText}` : '🪜 사다리타기 최종 결과가 나왔습니다!',
-                    imageUrl: 'https://cdn-icons-png.flaticon.com/512/3063/3063822.png',
+                    imageUrl: iconUrl,
                     link: {
                         mobileWebUrl: siteUrl,
                         webUrl: siteUrl,
