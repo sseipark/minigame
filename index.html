@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>세이가 좋아하는 미니게임</title>
     
-    <!-- 카카오톡 공유 시 뜨는 기본 대표 이미지 (오픈그래프) -->
+    <!-- 카카오톡 공유 기본 대표 이미지 -->
     <meta property="og:title" content="세이가 좋아하는 미니게임 ✨">
     <meta property="og:description" content="돌림판 & 사다리타기 미니게임! 지금 바로 도전해 보세요 🚀">
-    <meta property="og:image" content="https://raw.githubusercontent.com/sseipark/minigame/main/세이가%20좋아하는%20미니게임.png">
+    <meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/3063/3063822.png">
 
     <!-- ✨ 반짝이 파비콘(아이콘) 적용 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
@@ -147,7 +147,6 @@
 </div>
 
 <script>
-    // 🔑 입력해주신 자바스크립트 키 적용 완료!
     const KAKAO_JAVASCRIPT_KEY = '585b54b89f073152baca4c92e0204834'; 
 
     function initKakaoSDK() {
@@ -260,7 +259,7 @@
                 const winIdx = Math.floor(((3*Math.PI/2 - norm + 2*Math.PI) % (2*Math.PI)) / ((2*Math.PI)/rLen)) % rLen;
                 const finalVal = rData[winIdx] && rData[winIdx].trim() !== '' ? rData[winIdx] : `옵션 ${winIdx+1}`;
                 
-                lastResultText = `🎯 당첨 결과: ${finalVal}`;
+                lastResultText = finalVal;
                 document.getElementById('result-area').innerHTML = `
                     <div class="result-title">🎯 당첨 결과 🎯</div>
                     <div class="res-tag" style="font-size:14px;">[ <b>${finalVal}</b> ]</div>
@@ -369,7 +368,7 @@
             if(pIdx >= lLen) {
                 const tagsHtml = finalMap.map(m => `<div class="res-tag">${m.p} ➔ <b>${m.r}</b></div>`).join('');
                 lastResultList = finalMap;
-                lastResultText = "🪜 사다리 결과:\n" + finalMap.map(m => `${m.p} ➔ ${m.r}`).join('\n');
+                lastResultText = finalMap.map(m => `${m.p} ➔ ${m.r}`).join(', ');
 
                 document.getElementById('result-area').innerHTML = `
                     <div class="result-title">🎉 최종 사다리 결과 🎉</div>
@@ -417,7 +416,7 @@
         animP();
     }
 
-    // 카카오톡 공유 실행
+    // 카카오톡 공유
     function shareKakao() {
         if (!lastResultText) {
             alert('먼저 Game Start를 눌러 게임 결과를 확인해 주세요!');
@@ -426,32 +425,32 @@
 
         initKakaoSDK();
 
-        const shareObj = (window.Kakao && window.Kakao.Share) ? window.Kakao.Share : (window.Kakao ? window.Kakao.Link : null);
+        const siteUrl = "https://sseipark.github.io/minigame/";
 
-        if (shareObj && shareObj.sendDefault) {
+        if (window.Kakao && window.Kakao.Share) {
             let kakaoData = {
                 objectType: 'feed',
                 content: {
                     title: '✨ 세이가 좋아하는 미니게임 결과 ✨',
-                    description: currentGameMode === 'roulette' ? lastResultText : '🪜 사다리타기 결과가 도착했습니다!',
-                    imageUrl: 'https://raw.githubusercontent.com/sseipark/minigame/main/세이가%20좋아하는%20미니게임.png',
+                    description: currentGameMode === 'roulette' ? `🎯 당첨 결과: ${lastResultText}` : '🪜 사다리타기 최종 결과가 나왔습니다!',
+                    imageUrl: 'https://cdn-icons-png.flaticon.com/512/3063/3063822.png',
                     link: {
-                        mobileWebUrl: window.location.href,
-                        webUrl: window.location.href,
+                        mobileWebUrl: siteUrl,
+                        webUrl: siteUrl,
                     },
                 },
                 buttons: [
                     {
                         title: '나도 도전하기 🚀',
                         link: {
-                            mobileWebUrl: window.location.href,
-                            webUrl: window.location.href,
+                            mobileWebUrl: siteUrl,
+                            webUrl: siteUrl,
                         },
                     },
                 ],
             };
 
-            // 사다리 결과 목록화
+            // 사다리 결과 목록화 (말줄임 현상 방지)
             if (currentGameMode === 'ladder' && lastResultList.length > 0) {
                 kakaoData.itemContent = {
                     items: lastResultList.map(item => ({
@@ -461,7 +460,7 @@
                 };
             }
 
-            shareObj.sendDefault(kakaoData);
+            window.Kakao.Share.sendDefault(kakaoData);
         } else {
             alert('카카오 SDK를 불러오는 중입니다. 잠시 후 다시 시도해 주세요!');
         }
@@ -473,17 +472,17 @@
             return;
         }
 
-        const shareMsg = `✨ [세이가 좋아하는 미니게임 결과]\n\n${lastResultText}\n\n👉 너도 도전해봐: ${window.location.href}`;
+        const shareMsg = `✨ [세이가 좋아하는 미니게임 결과]\n\n${lastResultText}\n\n👉 너도 도전해봐: https://sseipark.github.io/minigame/`;
 
         if (navigator.share) {
             navigator.share({
                 title: '세이가 좋아하는 미니게임 ✨',
                 text: shareMsg,
-                url: window.location.href
+                url: 'https://sseipark.github.io/minigame/'
             }).catch(() => {});
         } else {
             navigator.clipboard.writeText(shareMsg)
-                .then(() => alert('게임 결과가 클립보드에 복사되었습니다! 원하는 곳에 붙여넣기(Ctrl+V) 하세요.'))
+                .then(() => alert('게임 결과가 복사되었습니다! 원하는 곳에 붙여넣기 하세요.'))
                 .catch(() => alert('복사에 실패했습니다.'));
         }
     }
