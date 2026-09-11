@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>세이가 좋아하는 미니게임</title>
     
-    <!-- 💖 핑크 아이콘 배포 주소로 직접 연결 -->
+    <!-- 💖 핑크 아이콘 메타 태그 -->
     <meta property="og:title" content="세이가 좋아하는 미니게임 ✨">
-    <meta property="og:description" content="돌림판 & 사다리타기 미니게임! 지금 바로 도전해 보세요 🚀">
+    <meta property="og:description" content="돌림판, 사다리, 뽑기판, 제비뽑기 미니게임! 지금 도전해 보세요 🚀">
     <meta property="og:image" content="https://sseipark.github.io/minigame/세이가%20좋아하는%20미니게임.png">
     <meta property="og:image:width" content="512">
     <meta property="og:image:height" content="512">
 
-    <!-- ✨ 반짝이 파비콘(아이콘) 적용 -->
+    <!-- ✨ 파비콘 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
     
-    <!-- 카카오톡 SDK 불러오기 -->
+    <!-- 카카오톡 SDK -->
     <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
     <style>
         :root {
@@ -38,8 +38,9 @@
         .app-title-main { font-size: 17px; font-weight: 600; color: #111827; letter-spacing: -0.3px; margin-bottom: 5px; }
         .app-title-sub { font-size: 15px; font-weight: 700; color: var(--blue-accent); }
 
-        .tab-group { display: flex; gap: 8px; background: #fff5f8; padding: 5px; border-radius: 16px; margin-bottom: 16px; }
-        .tab-btn { flex: 1; padding: 10px 0; font-size: 14px; font-weight: bold; border: none; background: none; color: #9ca3af; cursor: pointer; border-radius: 12px; transition: all 0.2s; }
+        /* 탭 버튼 4개 가로 정렬 대응 */
+        .tab-group { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: #fff5f8; padding: 5px; border-radius: 16px; margin-bottom: 16px; }
+        .tab-btn { padding: 8px 0; font-size: 12px; font-weight: bold; border: none; background: none; color: #9ca3af; cursor: pointer; border-radius: 10px; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: #ffffff; color: var(--pink-dark); box-shadow: 0 3px 10px rgba(0,0,0,0.05); }
 
         .game-panel { display: none; }
@@ -64,6 +65,11 @@
         .canvas-container { position: relative; width: 250px; height: 250px; margin: 10px auto; }
         .arrow { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 15px solid #f78fb3; z-index: 10; }
 
+        /* 뽑기판 UI 그리드 */
+        .board-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+        .board-card { aspect-ratio: 1; background: #ffeaa7; border-radius: 16px; border: 2px dashed #f8a5c2; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: var(--pink-dark); cursor: pointer; transition: all 0.2s; user-select: none; }
+        .board-card.opened { background: #fffdf9; border-style: solid; font-size: 13px; color: #374151; padding: 4px; text-align: center; word-break: break-all; }
+
         .result-card { margin-top: 16px; padding: 12px; background: #fff8fa; border: 1.5px dashed var(--pink-main); border-radius: 16px; text-align: center; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .result-title { font-weight: bold; color: var(--pink-dark); margin-bottom: 6px; font-size: 13px; }
         .result-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
@@ -77,6 +83,7 @@
         @media (max-width: 480px) {
             body { padding: 8px 4px; }
             .container { padding: 16px 12px; border-radius: 18px; }
+            .tab-btn { font-size: 11px; padding: 6px 0; }
             .scroll-input-area { max-height: 105px; }
             .canvas-container { width: 210px; height: 210px; }
             #rCanvas { width: 210px !important; height: 210px !important; }
@@ -92,9 +99,12 @@
         <div class="app-title-sub">Game Start</div>
     </div>
 
+    <!-- 4가지 게임 탭 -->
     <div class="tab-group">
-        <button class="tab-btn active" onclick="switchTab('roulette')">🎯 원판 돌리기</button>
-        <button class="tab-btn" onclick="switchTab('ladder')">🪜 사다리 타기</button>
+        <button class="tab-btn active" onclick="switchTab('roulette')">🎯 원판</button>
+        <button class="tab-btn" onclick="switchTab('ladder')">🪜 사다리</button>
+        <button class="tab-btn" onclick="switchTab('board')">🎁 뽑기판</button>
+        <button class="tab-btn" onclick="switchTab('draw')">🎟️ 제비뽑기</button>
     </div>
 
     <!-- 1. 돌림판 -->
@@ -138,6 +148,41 @@
         <button class="btn-start" onclick="startLadder()">🚀 Game Start</button>
     </div>
 
+    <!-- 3. 뽑기판 -->
+    <div id="board-panel" class="game-panel">
+        <div class="counter-box">
+            <span class="counter-label">뽑기 칸 수</span>
+            <button class="counter-btn" onclick="changeCount('b', -1)">-</button>
+            <span class="counter-val" id="b-num">6</span>
+            <button class="counter-btn" onclick="changeCount('b', 1)">+</button>
+        </div>
+
+        <div class="scroll-input-area">
+            <div class="single-grid" id="b-inputs"></div>
+        </div>
+
+        <button class="btn-start" style="margin-bottom: 12px;" onclick="resetBoard()">🎲 뽑기판 섞고 배치하기</button>
+
+        <div class="board-grid" id="board-grid-area"></div>
+    </div>
+
+    <!-- 4. 제비뽑기 (순서 정하기) -->
+    <div id="draw-panel" class="game-panel">
+        <div class="counter-box">
+            <span class="counter-label">참가자 수</span>
+            <button class="counter-btn" onclick="changeCount('d', -1)">-</button>
+            <span class="counter-val" id="d-num">4</span>
+            <button class="counter-btn" onclick="changeCount('d', 1)">+</button>
+        </div>
+
+        <div class="scroll-input-area">
+            <div class="single-grid" id="d-inputs"></div>
+        </div>
+
+        <button class="btn-start" onclick="startDraw()">🎟️ 랜덤 순서 뽑기!</button>
+    </div>
+
+    <!-- 공통 결과 창 -->
     <div class="result-card" id="result-area">
         <span style="color:#9ca3af; font-size:13px;">버튼을 눌러 게임을 시작하세요! 🎲</span>
     </div>
@@ -166,10 +211,14 @@
     let currentGameMode = 'roulette';
 
     const pastels = ["#FFD1DC", "#E2D4F9", "#FFECB3", "#C7CEEA", "#B5EAD7", "#FFDAC1", "#E0FEFE", "#f8a5c2"];
-    let rLen = 4, lLen = 4;
+    
+    let rLen = 4, lLen = 4, bLen = 6, dLen = 4;
     let rData = ["", "", "", ""];
-    let lPlayers = ["", "", "", ""];
-    let lResults = ["", "", "", ""];
+    let lPlayers = ["", "", "", ""], lResults = ["", "", "", ""];
+    let bData = ["1등 당첨", "꽝", "꽝", "2등 당첨", "꽝", "꽝"];
+    let dData = ["", "", "", ""];
+
+    let bShuffled = [];
 
     function switchTab(mode) {
         currentGameMode = mode;
@@ -183,10 +232,18 @@
             event.target.classList.add('active');
             document.getElementById('roulette-panel').classList.add('active');
             renderRInputs(); drawRoulette();
-        } else {
+        } else if (mode === 'ladder') {
             event.target.classList.add('active');
             document.getElementById('ladder-panel').classList.add('active');
             renderLInputs(); initLadder(false);
+        } else if (mode === 'board') {
+            event.target.classList.add('active');
+            document.getElementById('board-panel').classList.add('active');
+            renderBInputs(); resetBoard();
+        } else if (mode === 'draw') {
+            event.target.classList.add('active');
+            document.getElementById('draw-panel').classList.add('active');
+            renderDInputs();
         }
     }
 
@@ -195,14 +252,22 @@
             rLen = Math.max(2, Math.min(8, rLen + delta));
             document.getElementById('r-num').innerText = rLen;
             renderRInputs(); drawRoulette();
-        } else {
+        } else if (type === 'l') {
             lLen = Math.max(2, Math.min(6, lLen + delta));
             document.getElementById('l-num').innerText = lLen;
             renderLInputs(); initLadder(false);
+        } else if (type === 'b') {
+            bLen = Math.max(3, Math.min(9, bLen + delta));
+            document.getElementById('b-num').innerText = bLen;
+            renderBInputs(); resetBoard();
+        } else if (type === 'd') {
+            dLen = Math.max(2, Math.min(8, dLen + delta));
+            document.getElementById('d-num').innerText = dLen;
+            renderDInputs();
         }
     }
 
-    // --- 돌림판 ---
+    // --- 1. 돌림판 ---
     function renderRInputs() {
         const c = document.getElementById('r-inputs');
         c.innerHTML = '';
@@ -271,7 +336,7 @@
         requestAnimationFrame(anim);
     }
 
-    // --- 사다리 ---
+    // --- 2. 사다리 ---
     function renderLInputs() {
         const c = document.getElementById('l-inputs');
         c.innerHTML = '';
@@ -418,10 +483,79 @@
         animP();
     }
 
-    // 카카오톡 공유
+    // --- 3. 뽑기판 ---
+    function renderBInputs() {
+        const c = document.getElementById('b-inputs');
+        c.innerHTML = '';
+        for(let i=0; i<bLen; i++) {
+            const v = bData[i] !== undefined ? bData[i] : `항목 ${i+1}`;
+            c.innerHTML += `<input type="text" class="input-item" value="${v}" placeholder="뽑기 내용 ${i+1}" oninput="bData[${i}]=this.value;">`;
+        }
+    }
+
+    function resetBoard() {
+        bShuffled = [];
+        for(let i=0; i<bLen; i++) {
+            bShuffled.push(bData[i] && bData[i].trim() !== '' ? bData[i] : `항목 ${i+1}`);
+        }
+        bShuffled.sort(() => Math.random() - 0.5);
+
+        const area = document.getElementById('board-grid-area');
+        area.innerHTML = '';
+        for(let i=0; i<bLen; i++) {
+            area.innerHTML += `<div class="board-card" id="b-card-${i}" onclick="openBoardCard(${i})">🎁</div>`;
+        }
+        document.getElementById('result-area').innerHTML = '<span style="color:#9ca3af; font-size:13px;">원하는 상자를 클릭해 보세요! 🎁</span>';
+        lastResultText = '';
+    }
+
+    function openBoardCard(idx) {
+        const card = document.getElementById(`b-card-${idx}`);
+        if(card.classList.contains('opened')) return;
+
+        const val = bShuffled[idx];
+        card.classList.add('opened');
+        card.innerText = val;
+
+        lastResultText = `${idx+1}번 상자 ➔ [ ${val} ]`;
+        document.getElementById('result-area').innerHTML = `
+            <div class="result-title">🎁 뽑기 결과 (${idx+1}번 상자) 🎁</div>
+            <div class="res-tag" style="font-size:14px;">[ <b>${val}</b> ]</div>
+        `;
+    }
+
+    // --- 4. 제비뽑기 (순서 정하기) ---
+    function renderDInputs() {
+        const c = document.getElementById('d-inputs');
+        c.innerHTML = '';
+        for(let i=0; i<dLen; i++) {
+            const v = dData[i] || '';
+            c.innerHTML += `<input type="text" class="input-item" value="${v}" placeholder="참가자 이름 ${i+1}" oninput="dData[${i}]=this.value;">`;
+        }
+    }
+
+    function startDraw() {
+        let list = [];
+        for(let i=0; i<dLen; i++) {
+            list.push(dData[i] && dData[i].trim() !== '' ? dData[i] : `참가자 ${i+1}`);
+        }
+        list.sort(() => Math.random() - 0.5);
+
+        let finalDrawList = list.map((name, idx) => ({ p: `${idx+1}등 (순서)`, r: name }));
+        lastResultList = finalDrawList;
+        lastResultText = finalDrawList.map(m => `${m.p}: ${m.r}`).join(', ');
+
+        const tagsHtml = finalDrawList.map(m => `<div class="res-tag">${m.p}: <b>${m.r}</b></div>`).join('');
+        document.getElementById('result-area').innerHTML = `
+            <div class="result-title">🎟️ 최종 뽑기 순서 🎟️</div>
+            <div class="result-tags">${tagsHtml}</div>
+        `;
+    }
+
+    // --- 카카오톡 및 공유 기능 ---
     function shareKakao() {
         if (!lastResultText) {
-            alert('먼저 Game Start를 눌러 게임 결과를 확인해 주세요!');
+            alert('먼저 게임을 진행하여 결과를 만들어 주세요!');
             return;
         }
 
@@ -431,29 +565,24 @@
         const iconUrl = "https://sseipark.github.io/minigame/세이가%20좋아하는%20미니게임.png";
 
         if (window.Kakao && window.Kakao.Share) {
+            let descText = '✨ 미니게임 결과가 도착했습니다!';
+            if(currentGameMode === 'roulette') descText = `🎯 당첨 결과: ${lastResultText}`;
+            else if(currentGameMode === 'board') descText = `🎁 뽑기 결과: ${lastResultText}`;
+
             let kakaoData = {
                 objectType: 'feed',
                 content: {
                     title: '✨ 세이가 좋아하는 미니게임 결과 ✨',
-                    description: currentGameMode === 'roulette' ? `🎯 당첨 결과: ${lastResultText}` : '🪜 사다리타기 최종 결과가 나왔습니다!',
+                    description: descText,
                     imageUrl: iconUrl,
-                    link: {
-                        mobileWebUrl: siteUrl,
-                        webUrl: siteUrl,
-                    },
+                    link: { mobileWebUrl: siteUrl, webUrl: siteUrl },
                 },
                 buttons: [
-                    {
-                        title: '나도 도전하기 🚀',
-                        link: {
-                            mobileWebUrl: siteUrl,
-                            webUrl: siteUrl,
-                        },
-                    },
+                    { title: '나도 도전하기 🚀', link: { mobileWebUrl: siteUrl, webUrl: siteUrl } }
                 ],
             };
 
-            if (currentGameMode === 'ladder' && lastResultList.length > 0) {
+            if ((currentGameMode === 'ladder' || currentGameMode === 'draw') && lastResultList.length > 0) {
                 kakaoData.itemContent = {
                     items: lastResultList.map(item => ({
                         item: item.p,
@@ -470,7 +599,7 @@
 
     function shareNativeOrLink() {
         if (!lastResultText) {
-            alert('먼저 Game Start를 눌러 게임 결과를 확인해 주세요!');
+            alert('먼저 게임을 진행하여 결과를 만들어 주세요!');
             return;
         }
 
